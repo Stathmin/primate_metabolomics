@@ -75,14 +75,14 @@ exp_df %>% slice(1:5) %>%
   select(1:5) #upper-left chunk
 
 exp_df %>% 
-  slice(dim(.)[1] - (4:0)) %>% 
-  select(dim(.)[2] - (4:0)) #lower_right chunk
+  tail(5) %>% 
+  select(tail(colnames(.), 5)) #lower_right chunk
 
 #l_r chunk shows strange last row, needs checking
 exp_df %>% 
   tail(1) %>% 
-  select(\(x) ! is.na(x)) %>% 
-  unlist(., use.names = FALSE) %>% 
+  select(!is.na) %>% 
+  unlist(use.names = FALSE) %>% 
   head() #contains alternative names for columns where applicable
 
 # NO IDEA HOW TO WORK WITH ALT COL NAMES!!!
@@ -106,7 +106,7 @@ square_exp_df <- exp_df %>%
 #check for strange values in columns after first three
 sus_values_mask <- square_exp_df %>% 
   select(-(1:3)) %>%
-  mutate_if(is.character, ~replace_na(.,"")) %>% 
+  mutate(across(where(is.character), \(x) replace_na(x,''))) %>% 
   mutate(across(everything(),retrun_only_nonumeric_strings))
 
 sus_values_mask %>% unlist %>% unname %>% unique #ONLY NAs, great!
@@ -145,8 +145,20 @@ bio_df <- bio_df %>%
 square_exp_df %>% 
   anti_join(bio_df, by=c('name'='sample id')) # 0 × 4,701 YEAH, FULL MERGE!
 
+bio_df %>% 
+  anti_join(square_exp_df, by=c('sample id'='name')) %>% 
+  select(`sample id`, outlier) %>% 
+  filter(any(is.na(colnames(.)))) # all the missing samples in square_exp_df are outliers, so godspeed!
+
 merged_df <- square_exp_df %>% 
   left_join(bio_df, by=c('name'='sample id')) #198 × 4,708
+
+merged_df %>% 
+  select(outlier) %>% 
+  drop_na() #all outliers are empty -> remove them
+
+merged_df <- merged_df %>% 
+  select(-outlier)
 
 all(merged_df[c("species.x","tissue.x")] == merged_df[c("species.y","tissue.y")]) #there are some discrepancies between .x and .y values!
 
@@ -164,7 +176,6 @@ merged_df %>% select(matches('^[^-]+$')) %>% colnames -> special_colnames
 merged_df <- merged_df %>% relocate(special_colnames, 1) %>% rename(species=species.y, tissue=tissue.y)
 
 merged_df <- clean_names(merged_df)
-# 
 
 # First operations --------------------------------------------------------
 
