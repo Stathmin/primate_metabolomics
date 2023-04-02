@@ -45,6 +45,20 @@ pivot_transpose <- function(
   
 }
 
+#functions to find suspicious values
+.retrun_only_nonumeric_strings <- function(x){
+  y <- as.character(x)
+  if (stri_count_regex(y,"^[0-9\\.]+$")==1){
+    return(NA_character_)
+  }else{
+    return(x)
+  }
+}
+
+retrun_only_nonumeric_strings <- function(X){
+  map(X, .retrun_only_nonumeric_strings) %>% unlist
+}
+
 # file_reading_expression -------------------------------------------------
 
 expression_file <- './data/pbio.1001871.s022.xlsx'
@@ -82,25 +96,12 @@ special_names_table <- exp_df %>% #table of names for genes and loci
                values_to = 'special_name') %>% 
   slice(2:nrow(.)) # because row 1 is c('name',  'annotation')
 
+special_names_table <- special_names_table %>% #for compatibility with merged_df further
+  mutate(across(everything(), make_clean_names))
 
 #now drop last row with non-numeric data
 square_exp_df <- exp_df %>% 
   head(-1)
-
-#functions to find suspicious values
-.retrun_only_nonumeric_strings <- function(x){
-  y <- as.character(x)
-  if (stri_count_regex(y,"^[0-9\\.]+$")==1){
-    return(NA_character_)
-  }else{
-    return(x)
-  }
-}
-
-retrun_only_nonumeric_strings <- function(X){
-  map(X, .retrun_only_nonumeric_strings) %>% unlist
-}
-
 
 #check for strange values in columns after first three
 sus_values_mask <- square_exp_df %>% 
@@ -163,8 +164,10 @@ merged_df %>% select(matches('^[^-]+$')) %>% colnames -> special_colnames
 merged_df <- merged_df %>% relocate(special_colnames, 1) %>% rename(species=species.y, tissue=tissue.y)
 
 merged_df <- clean_names(merged_df)
-
+# 
 
 # First operations --------------------------------------------------------
 
 merged_df %>% 
+  group_by(gender, species, tissue) %>% 
+  summarise(across(where(is.numeric), mean, na.rm=TRUE))
