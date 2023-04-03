@@ -17,9 +17,13 @@ library('stringi')
 # file_reading_expression -------------------------------------------------
 
 expression_file <- './data/pbio.1001871.s022.xlsx'
+tab1 <- read_xlsx(expression_file)
+tab1
 
 # sample_file_reading -----------------------------------------------------
 
 bio_samples_file <- './data/pbio.1001871.s016.xlsx'
+tab2 <- read_xlsx(bio_samples_file)
+tab2
 
-# MERGE -------------------------------------------------------------------
+#  crcr-------------------------------------------------------------------
