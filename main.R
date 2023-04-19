@@ -219,3 +219,4 @@ remove(list = c('merged_df', 'special_names_table'))
 # First operations --------------------------------------------------------
 
 shinyAppDir('violins/')
+
