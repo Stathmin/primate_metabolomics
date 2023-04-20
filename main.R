@@ -9,6 +9,8 @@ library('janitor')
 library('purrr')
 library('stringi')
 library('checkmate')
+library('multcompView')
+library('shiny')
 
 # custom_fucntions --------------------------------------------------------
 
@@ -216,7 +218,11 @@ merged_df <- merged_df %>%
 merged_df %>% write_rds('.cache/merged_df.rds')
 special_names_table %>% write_rds('.cache/special_names_table.rds')
 remove(list = c('merged_df', 'special_names_table'))
-# First operations --------------------------------------------------------
 
-shinyAppDir('violins/')
+# subsetting ----
 
+if (!file.exists('.SUCCESS_TOKEN')) {source('prepare_subsets.R')}
+
+# exploration --------------------------------------------------------
+
+shinyAppDir('violins', options = list(launch.browser = TRUE))
