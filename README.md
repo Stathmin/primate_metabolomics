@@ -39,4 +39,4 @@
 4. Попробуйте соединить обе таблицы в одну.
 
 ### Результаты
-![shiny app demonstration](/files/shiny_screen.png)
+[[/files/shiny_screen.png|shiny app demonstration]]
