@@ -23,9 +23,9 @@ generate_label_df <- function(TUKEY, variable) {
 }
 
 
-merged_df <- read_rds(str_interp('.cache/merged_df.rds'))
+merged_df <- read_rds(str_interp('violins/merged_df.rds'))
 special_names_table <- read_rds(
-  str_interp('.cache/special_names_table.rds')) %>%
+  str_interp('violins/special_names_table.rds')) %>%
   mutate(special_name = paste(common_name,special_name, sep = '_'))
 
 merged_df <- merged_df %>%
