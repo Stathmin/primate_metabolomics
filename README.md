@@ -38,5 +38,13 @@
 3. Попробуйте привести таблицы к одинаковому формату
 4. Попробуйте соединить обе таблицы в одну.
 
+### Установка и пуск
+```bash
+git clone --branch daniel https://github.com/Stathmin/primate_metabolomics
+cd primate_metabolomics
+Rscript main.R
+```
+
 ### Результаты
 ![shiny app demonstration](/files/shiny_screen.png)
+[Shiny-демонстрация](https://stathmin.shinyapps.io/Planet_of_the_Apes_Metabolites/)

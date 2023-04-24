@@ -45,8 +45,8 @@ merged_df %>%
   select(where(is.numeric)) %>%
   colnames -> out_variables
 
-out_variables %>% write_rds('pre_selected/not_distinct.rds')
-special_names_table$special_name %>% write_rds('pre_selected/distinct_special_names.rds')
+out_variables %>% write_rds('violins/not_distinct.rds')
+special_names_table$special_name %>% write_rds('violins/distinct_special_names.rds')
 
 # # all primates are distinct -----------------------------------------------
 
@@ -128,9 +128,9 @@ merged_df %>%
     )) %>%
   unnest(!!out_variables) %>%
   select(where(\(x) x[1] == TRUE)) %>%
-  colnames() %>% write_rds('pre_selected/distinct_species.rds')
+  colnames() %>% write_rds('violins/distinct_species.rds')
 
-distinct_species_variables <- read_rds('pre_selected/distinct_species.rds')
+distinct_species_variables <- read_rds('violins/distinct_species.rds')
 
 merged_df %>%
   summarise(across(!!distinct_species_variables, ~ list(
@@ -141,8 +141,8 @@ merged_df %>%
   )) %>%
   unnest(!!distinct_species_variables) %>%
   select(where(\(x) x[1] == TRUE)) %>%
-  colnames() %>% write_rds('pre_selected/distinct_species_at_all_tissues.rds')
+  colnames() %>% write_rds('violins/distinct_species_at_all_tissues.rds')
 
-distinct_species_at_all_tissues_variables <- read_rds('pre_selected/distinct_species_at_all_tissues.rds')
+distinct_species_at_all_tissues_variables <- read_rds('violins/distinct_species_at_all_tissues.rds')
 
 file.create('.SUCCESS_TOKEN')

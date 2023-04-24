@@ -16,10 +16,12 @@ custom_theme <- bs_theme(
   version = 5,
   bg = "#FFFFFF",
   fg = "#000000",
-  primary = "#0199F8",
-  secondary = "#FF374B",
+  primary = "#E30",
+  secondary = "#0E3",
   base_font = font_google("Fira Code", local = TRUE)
 )
+
+gdtools::register_gfont(family = "Fira Code", subset = c("latin", "latin-ext"))
 
 formulate <- function(RHS, LHF) {
   if (length(LHF) == 0) {
@@ -46,9 +48,9 @@ generate_label_df <- function(TUKEY, variable) {
 }
 
 merged_df <-
-  read_rds(str_interp('${here()}/.cache/merged_df.rds'))
+  read_rds(str_interp('merged_df.rds'))
 special_names_table <-
-  read_rds(str_interp('${here()}/.cache/special_names_table.rds')) %>%
+  read_rds(str_interp('special_names_table.rds')) %>%
   mutate(special_name = paste(common_name, special_name, sep = '_'))
 
 merged_df <- merged_df %>%
@@ -71,12 +73,12 @@ merged_df %>%
   colnames -> out_variables
 
 out_variables <-
-  read_rds(str_interp('${here()}/pre_selected/not_distinct.rds'))
+  read_rds(str_interp('distinct_species.rds'))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(# Application title
   theme = custom_theme,
-  titlePanel("Planet of the Apes"),
+  titlePanel("Planet of the Apes' Metabolites"),
   
   # Sidebar with a slider input for number of bins
   sidebarLayout(
@@ -108,8 +110,8 @@ ui <- fluidPage(# Application title
                 placeholder = 'species + gender ~ age_group + tissue'),
       selectInput(
         'chosen_set',
-        'Pre_selected:',
-        choices = list.files(str_interp('${here()}/pre_selected/'), 
+        'Pre selected:',
+        choices = list.files('.', 
                              pattern = 'distinct'),
         selected = "distinct_species_at_all_tissues.rds"
       ),
@@ -152,8 +154,13 @@ ui <- fluidPage(# Application title
           fluidRow(uiOutput("tukeyLetters_flex"))
         ),
       ),
-    )
-  ))
+    )),
+  div(
+    class = "footer",
+    style = 'text-align: center;',
+    HTML('<a href="https://github.com/Stathmin/primate_metabolomics/tree/daniel">github project by Stathmin</a>')
+  )
+  )
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
@@ -162,14 +169,14 @@ server <- function(input, output, session) {
       session,
       'out_variables',
       choices = read_rds(
-        str_interp('${here()}/pre_selected/${input$chosen_set}')
+        str_interp('${input$chosen_set}')
       ),
       selected = read_rds(
-        str_interp('${here()}/pre_selected/${input$chosen_set}')
+        str_interp('${input$chosen_set}')
       )[1],
       server = TRUE
     )
-  }, ignoreInit = FALSE)
+  }, ignoreInit = TRUE)
   
   out_variables_d <-
     debounce(reactive({
@@ -220,7 +227,7 @@ server <- function(input, output, session) {
   
   
   local_tukey <- reactive(if (tukey_needed()) {
-    TukeyHSD(local_anova()) %>%
+    TukeyHSD(local_anova(), ordered = TRUE) %>%
       purrr::modify_depth(5, \(x) replace_na(x,
                                              replace = 0),
                           .ragged = TRUE)
@@ -265,6 +272,7 @@ server <- function(input, output, session) {
       colformat_double(big.mark = ",",
                        digits = 2,
                        na_str = "N/A") %>%
+      font(fontname = 'Fira Code') %>% 
       autofit() %>%
       htmltools_value()
   })
@@ -284,11 +292,13 @@ server <- function(input, output, session) {
       colformat_double(big.mark = ",",
                        digits = 2,
                        na_str = "N/A") %>%
+      font(fontname = 'Fira Code') %>% 
       autofit() %>%
       htmltools_value()
   })
   output$tukeyTable_flex <- renderUI(if (tukey_needed()) {
     tidy(local_tukey()) %>%
+      select(-null.value) %>% 
       mutate(
         sig = case_when(
           adj.p.value <= 0.001 ~ "***",
@@ -296,19 +306,25 @@ server <- function(input, output, session) {
           adj.p.value <= 0.05 ~ "*",
           adj.p.value <= 0.1 ~ ".",
           .default = ""
-        )
+        ),
+        across(where(is.numeric), \(x) round(x, digits = 2))
       ) %>%
-      flextable() %>%
-      colformat_double(big.mark = ",",
-                       digits = 2,
-                       na_str = "N/A") %>%
-      autofit() %>%
-      htmltools_value()
+      DT::datatable(filter="top", selection="multiple", escape=FALSE, style='auto') %>% 
+      DT::renderDataTable() %>% 
+      fluidPage()
+      # flextable() %>%
+      # colformat_double(big.mark = ",",
+      #                  digits = 2,
+      #                  na_str = "N/A") %>%
+      # font(fontname = 'Fira Code') %>% 
+      # autofit() %>%
+      # htmltools_value()
   } else {
     ''
   })
   output$tukeyLetters_flex <- renderUI(if (letters_needed()) {
     flextable(local_names()) %>%
+      font(fontname = 'Fira Code') %>% 
       htmltools_value()
   } else {
     ''
